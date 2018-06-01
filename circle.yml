@@ -1,0 +1,40 @@
+version: 2
+
+defaults: &defaults
+  docker:
+    - image: circleci/node:8
+
+get_deps: *get_deps
+  restore_cache:
+    key: deps-{{checksum 'package.json'}}
+
+
+jobs:
+  install:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - <<: *get_deps
+      - run:
+          name: Install deps
+          command: |
+            if [ ! -d node_modules ]; then
+              npm install --no-package-lock
+            fi
+      - save_cache:
+          key: deps-{{checksum 'package.json'}}
+
+  test:
+    <<: *defaults
+
+    steps:
+      - <<: *get_deps
+      - npx test
+
+  deploy_production:
+    <<: *defaults
+
+    steps:
+      - <<: *get_deps
+      - run: npx node-lambda deploy
