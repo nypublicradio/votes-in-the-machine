@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - <<: *get_deps
-      - npm test
+      - run: npm test
 
   deploy_production:
     environment:
