@@ -6,7 +6,7 @@ defaults: &defaults
 
 get_deps: &get_deps
   restore_cache:
-    key: deps-{{checksum 'package.json'}}
+    key: deps-{{checksum "package.json"}}
 
 do_deploy: &do_deploy
   steps:
@@ -39,7 +39,7 @@ jobs:
               npm install --no-package-lock
             fi
       - save_cache:
-          key: deps-{{checksum 'package.json'}}
+          key: deps-{{checksum "package.json"}}
           paths:
             - node_modules
 
