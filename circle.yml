@@ -15,8 +15,7 @@ do_deploy: &do_deploy
     - run:
         name: deploy envvars
         command: |
-          env | sed -n "s/DEPLOY_//p" >> .env
-          env | sed -n "s/^"$ENV"_//p" >> .env
+          env | sed -n "s/^DEPLOY_//p" >> .env
     - run:
         name: runtime envvars
         command: env | sed -n "s/^"$ENV"_//p" > deploy.env
