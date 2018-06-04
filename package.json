@@ -1,0 +1,23 @@
+{
+  "name": "votes-in-the-machine",
+  "version": "0.0.0",
+  "description": "AP elections results lambda poller",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^5.2.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nypublicradio/votes-in-the-machine.git"
+  },
+  "author": "Brian Whitton",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nypublicradio/votes-in-the-machine/issues"
+  },
+  "homepage": "https://github.com/nypublicradio/votes-in-the-machine#readme"
+}
