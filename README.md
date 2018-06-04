@@ -7,3 +7,9 @@ IAM role: votes-in-the-machine-role
 Policy: votes-in-the-machine-policy
 lambda: votes-in-the-machine-<env>
 bucket: votes-in-the-machine-<env>
+
+## ap client params
+- date: `YYYY-MM-DD`
+- statePostal
+- test
+- national
