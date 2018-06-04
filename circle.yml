@@ -4,13 +4,13 @@ defaults: &defaults
   docker:
     - image: circleci/node:8.10
 
-get_deps: *get_deps
+get_deps: &get_deps
   restore_cache:
     key: deps-{{checksum 'package.json'}}
 
-do_deploy: *do_deploy
+do_deploy: &do_deploy
   steps:
-    <<: *get_deps
+    - <<: *get_deps
     - run:
         name: deploy envvars
         command: |
@@ -63,28 +63,30 @@ jobs:
     <<: *do_deploy
 
 workflows:
+  version: 2
   test-and-deploy:
-    install:
-      filters:
-        tags:
-          only: /.*/
-    test:
-      requires:
-        - install
-      filters:
-        tags:
-          only: /.*/
-    deploy_demo:
-      requires:
-        - test
-      filters:
-        branches:
-          only: master
-    deploy_production:
-      requires:
-        - test
-      filters:
-        branches:
-          ignore: /.*/
-        tags:
-          only: /^v[0-9]+\.[0-9]+\.[0-9]+/
+    jobs:
+      - install:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          requires:
+            - install
+          filters:
+            tags:
+              only: /.*/
+      - deploy_demo:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
+      - deploy_production:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+/
