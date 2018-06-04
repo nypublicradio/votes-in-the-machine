@@ -5,3 +5,6 @@ event.json
 
 # vim cruft
 .*~
+.*sw*
+
+node_modules
