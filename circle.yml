@@ -20,7 +20,7 @@ do_deploy: &do_deploy
           env | sed "s/DEPLOY_$ENV_//p" >> .env
     - run:
         name: runtime envvars
-        command: env | sed "s/$ENV_//p" > deploy.env
+        command: env | sed -n "s/^"$ENV"_//p" > deploy.env
     - run:
         name: deploy
         command: npx node-lambda deploy -f deploy.env --environment `echo $ENV | tr A-Z a-z`
