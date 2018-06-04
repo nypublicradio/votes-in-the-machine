@@ -79,6 +79,7 @@ describe('ap client', function() {
 
   describe('.fetchResults()', function() {
     it('hits the AP backend and does some light processing');
+    // saves nextrequest after fetching from the AP backend
     // lastUpdated
     // output.lastUpdated = timestamp.format("h:mm a") + " ET";
     // pollsClosed
