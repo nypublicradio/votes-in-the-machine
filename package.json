@@ -3,13 +3,20 @@
   "version": "0.0.0",
   "description": "AP elections results lambda poller",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "aws-sdk": "^2.250.1",
+    "moment": "^2.22.2",
+    "request": "^2.87.0",
+    "request-promise-native": "^1.0.5"
+  },
   "devDependencies": {
+    "aws-sdk-mock": "^2.0.0",
     "mocha": "^5.2.0",
-    "node-lambda": "^0.11.7"
+    "node-lambda": "^0.11.7",
+    "sinon": "^5.0.10"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "RESULTS_BUCKET=test-bucket AP_RESULTS_ENDPOINT=https://example.com/api mocha"
   },
   "repository": {
     "type": "git",
