@@ -15,9 +15,7 @@ do_deploy: &do_deploy
     - run:
         name: deploy envvars
         command: |
-          echo AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID > .env
-          echo AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> .env
-          env | sed -n "s/DEPLOY_"$ENV"_//p" >> .env
+          env | sed "s/DEPLOY_//p" >> .env
     - run:
         name: runtime envvars
         command: env | sed -n "s/^"$ENV"_//p" > deploy.env
@@ -55,6 +53,7 @@ jobs:
   deploy_production:
     environment:
       ENV: PROD
+      AWS_REGION: $PROD_AWS_REGION
 
     <<: *defaults
     <<: *do_deploy
@@ -62,6 +61,7 @@ jobs:
   deploy_demo:
     environment:
       ENV: DEMO
+      AWS_REGION: $DEMO_AWS_REGION
 
     <<: *defaults
     <<: *do_deploy
