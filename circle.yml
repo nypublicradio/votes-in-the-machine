@@ -10,6 +10,7 @@ get_deps: &get_deps
 
 do_deploy: &do_deploy
   steps:
+    - checkout
     - <<: *get_deps
     - run:
         name: deploy envvars
@@ -47,6 +48,7 @@ jobs:
     <<: *defaults
 
     steps:
+      - checkout
       - <<: *get_deps
       - run: npm test
 
