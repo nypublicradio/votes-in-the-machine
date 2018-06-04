@@ -2,11 +2,27 @@ version: 2
 
 defaults: &defaults
   docker:
-    - image: circleci/node:8
+    - image: circleci/node:8.10
 
 get_deps: *get_deps
   restore_cache:
     key: deps-{{checksum 'package.json'}}
+
+do_deploy: *do_deploy
+  steps:
+    <<: *get_deps
+    - run:
+        name: deploy envvars
+        command: |
+          echo $AWS_ACCESS_KEY_ID > .env
+          echo $AWS_SECRET_ACCESS_KEY >> .env
+          env | sed "s/DEPLOY_$ENV_//p" >> .env
+    - run:
+        name: runtime envvars
+        command: env | sed "s/$ENV_//p" > deploy.env
+    - run:
+        name: deploy
+        command: npx node-lambda deploy -f deploy.env --environment `echo $ENV | tr A-Z a-z`
 
 
 jobs:
@@ -33,8 +49,42 @@ jobs:
       - npx test
 
   deploy_production:
-    <<: *defaults
+    environment:
+      ENV: PROD
 
-    steps:
-      - <<: *get_deps
-      - run: npx node-lambda deploy
+    <<: *defaults
+    <<: *do_deploy
+
+  deploy_demo:
+    environment:
+      ENV: PROD
+
+    <<: *defaults
+    <<: *do_deploy
+
+workflows:
+  test-and-deploy:
+    install:
+      filters:
+        tags:
+          only: /.*/
+    test:
+      requires:
+        - install
+      filters:
+        tags:
+          only: /.*/
+    deploy_demo:
+      requires:
+        - test
+      filters:
+        branches:
+          only: master
+    deploy_production:
+      requires:
+        - test
+      filters:
+        branches:
+          ignore: /.*/
+        tags:
+          only: /^v[0-9]+\.[0-9]+\.[0-9]+/
