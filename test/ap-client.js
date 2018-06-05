@@ -6,7 +6,9 @@ const moment = require('moment');
 
 const APClient = require('../lib/ap-client.js');
 
-const resultsMock = require('./fixtures/election.js');
+const apMock = require('./fixtures/election.js');
+const s3results = require('./fixtures/results.js');
+const nextresults = require('./fixtures/nextresults.js');
 
 describe('ap client', function() {
   const testOptions = {
@@ -72,22 +74,12 @@ describe('ap client', function() {
     });
   });
 
-  describe('.mergeResults()', function() {
-
-    it('combines the response from nextResults with latest cachedResults');
-
-  });
-
-  describe('.cachedResults()', function() {
-    it('gets the most recent result set from the bucket');
-  });
-
   describe('.fetchResults()', function() {
     let apServer, ap, putSpy;
 
     beforeEach(function() {
       ap = new APClient(testOptions);
-      apServer = nock(ap.host).get(`/${ap.path}/${ap.date}`).query(true).reply(200, resultsMock).persist();
+      apServer = nock(ap.host).get(`/${ap.path}/${ap.date}`).query(true).reply(200, apMock).persist();
       putSpy = AWS.mock('S3', 'putObject');
     });
 
@@ -102,7 +94,7 @@ describe('ap client', function() {
     });
 
     it('saves nextrequest after fetching from AP backend', async function() {
-      let { nextrequest } = resultsMock;
+      let { nextrequest } = apMock;
 
       await ap.fetchResults();
 
@@ -135,7 +127,7 @@ describe('ap client', function() {
     it('filters and excludes races', async function() {
       let results = await ap.fetchResults();
 
-      assert.equal(results.races.length, resultsMock.races.length, 'pull all races if unspecified');
+      assert.equal(results.races.length, apMock.races.length, 'pull all races if unspecified');
 
       ap.includeRaces = ["31206", 31214];
       results = await ap.fetchResults();
@@ -155,7 +147,7 @@ describe('ap client', function() {
     });
 
     it('sorts candidates by vote then by name', async function() {
-      let resultsCopy = JSON.parse(JSON.stringify(resultsMock));
+      let resultsCopy = JSON.parse(JSON.stringify(apMock));
 
       // winner first, then vote count, then last name, then first name
       let { candidates } = resultsCopy.races[0].reportingUnits[0];
@@ -174,6 +166,77 @@ describe('ap client', function() {
       assert.equal(race.candidates[1].candidateID, candidates[0].candidateID);
       assert.equal(race.candidates[2].candidateID, candidates[3].candidateID);
       assert.equal(race.candidates[3].candidateID, candidates[1].candidateID);
+    });
+  });
+
+  describe('.fetchCachedResults()', function() {
+    it('gets the most recent result set from the bucket', async function() {
+      let getSpy = sinon.stub().callsArgWith(1, null, {});
+      AWS.mock('S3', 'getObject', getSpy);
+
+      const ap = new APClient(testOptions);
+      let response = await ap.fetchCachedResults();
+
+      assert.ok(getSpy.calledWith({
+        Bucket: process.env.RESULTS_BUCKET,
+        Key: `${testOptions.race}/results.json`
+      }));
+    });
+  });
+
+  describe('.mergeResults()', function() {
+    afterEach(function() {
+      nock.cleanAll();
+      AWS.restore('S3');
+    });
+
+    it('adds the apikey to the given next request url', async function() {
+      const NEXT_URL = 'http://example.com/next';
+      const ap = new APClient(testOptions);
+      const apServer = nock('http://example.com')
+        .get('/next')
+        .query({apikey: process.env.AP_API_KEY})
+        .reply(200, {races: []}); // make sure empty updates are OK
+
+      await ap.mergeResults(NEXT_URL);
+
+      assert.ok(apServer.isDone());
+    });
+
+    it('returns an updated result set', async function() {
+      const NEXT_URL = 'http://example.com/next';
+      let apClient = new APClient(testOptions);
+
+      let putSpy = AWS.mock('S3', 'putObject');
+      AWS.mock('S3', 'getObject', s3results);
+      nock('http://example.com')
+        .get('/next')
+        .query(true)
+        .reply(200, nextresults);
+
+      let response = await apClient.mergeResults(NEXT_URL);
+
+      let { races } = response;
+
+      assert.equal(races.length, s3results.races.length, 'should have the same number of races after update');
+
+      nextresults.races.forEach(race => {
+        assert.equal(
+          race.reportingUnits[0].precinctsReporting,
+          races.find(r => r.raceID === race.raceID).precinctsReporting
+        )
+      });
+
+      assert.ok(putSpy.stub.calledWith({
+        Bucket: process.env.RESULTS_BUCKET,
+        Key: `${apClient.race}/nextrequest.json`,
+        Body: Buffer.from(JSON.stringify({nextrequest: nextresults.nextrequest})),
+        ContentType: 'application/json',
+        CacheControl: 'no-cache,no-store,max-age=60',
+        ACL: 'public-read',
+        Expires: moment('12/31/1969', 'MM/DD/YYYY').toDate()
+      }), 'updates new next request');
+
     });
   });
 });
