@@ -6,15 +6,20 @@ exports.handler = async params => {
   const ap = new APClient(params);
   const { race } = params;
 
-  let nextrequest = await ap.nextRequest();
+  let nextrequestUrl = await ap.nextRequest();
 
-  let currentResults;
-  if (nextrequest) {
-    currentResults = await ap.mergeResults(nextrequest);
+  let response;
+  if (nextrequestUrl) {
+    let updatedResults = await ap.mergeResults(nextrequestUrl);
+    if (updatedResults) {
+      response = await uploadToS3(updatedResults, {prefix: race});
+      console.log('success:', response);
+      return updatedResults;
+    }
   } else {
-    currentResults = await ap.fetchResults();
+    let newResults = await ap.fetchResults();
+    response = await uploadToS3(newResults, {prefix: race});
+    console.log('success:', response);
+    return newResults;
   }
-
-  let response = await uploadToS3(currentResults, {prefix: race});
-  console.log('success:', response);
 }
