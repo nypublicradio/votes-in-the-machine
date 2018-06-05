@@ -2,7 +2,7 @@ const assert = require('assert');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const nock = require('nock');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const apMock = require('./fixtures/election.js');
 const nextresults = require('./fixtures/nextresults.js');

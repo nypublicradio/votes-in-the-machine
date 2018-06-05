@@ -2,7 +2,7 @@ const assert = require('assert');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const nock = require('nock');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const APClient = require('../lib/ap-client.js');
 
@@ -113,6 +113,7 @@ describe('ap client', function() {
 
     it('adds some additonal metadata to the result set', async function() {
       let now = moment();
+      ap.pollsCloseAt = now.clone().add(60, 'minutes');
       let results = await ap.fetchResults();
 
       assert.equal(results.lastUpdated, `${now.format('h:mm a')} ET`);

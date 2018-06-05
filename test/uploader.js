@@ -1,6 +1,6 @@
 const assert = require('assert');
 const AWS = require('aws-sdk-mock');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const { uploadToS3 } = require('../lib/upload');
 

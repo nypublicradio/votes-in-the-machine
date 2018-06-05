@@ -1,6 +1,8 @@
 const APClient = require('./lib/ap-client');
 const { uploadToS3 } = require('./lib/upload');
-const moment = require('moment');
+const moment = require('moment-timezone');
+
+moment.tz.setDefault('America/New_York');
 
 exports.handler = async params => {
   console.log(params);
