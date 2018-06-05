@@ -1,13 +1,18 @@
 const assert = require('assert');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
+const nock = require('nock');
+const moment = require('moment');
 
 const APClient = require('../lib/ap-client.js');
+
+const resultsMock = require('./fixtures/election.js');
 
 describe('ap client', function() {
   const testOptions = {
     date: '2018-11-08',
-    statePostal: 'NY', test: true,
+    statePostal: 'NY',
+    test: true,
     national: true,
     race: 'race-slug'
   };
@@ -78,16 +83,97 @@ describe('ap client', function() {
   });
 
   describe('.fetchResults()', function() {
-    it('hits the AP backend and does some light processing');
-    // saves nextrequest after fetching from the AP backend
-    // lastUpdated
-    // output.lastUpdated = timestamp.format("h:mm a") + " ET";
-    // pollsClosed
-    // output.pollsClosed = timestamp.diff(moment("2017-09-12-21-00", "YYYY-MM-DD-HH-mm"), "minutes") >= 0 || !!process.env.POLLS_CLOSED;
-    // pick for supplied raceIDs
-    // isContested option
-    // pull top level race data: totalVotes, precinctsReporting, precinctsTotal, raceID, officeName, seatName, seatNum, description, numWinners
-    // sort candidates by vote then by name
-    // include proposals options
-  })
+    let apServer, ap, putSpy;
+
+    beforeEach(function() {
+      ap = new APClient(testOptions);
+      apServer = nock(ap.host).get(`/${ap.path}/${ap.date}`).query(true).reply(200, resultsMock).persist();
+      putSpy = AWS.mock('S3', 'putObject');
+    });
+
+    afterEach(function() {
+      nock.cleanAll();
+      AWS.restore('S3');
+    });
+
+    it('hits the AP backend', async function() {
+      await ap.fetchResults();
+      assert.ok(apServer.isDone());
+    });
+
+    it('saves nextrequest after fetching from AP backend', async function() {
+      let { nextrequest } = resultsMock;
+
+      await ap.fetchResults();
+
+      assert.ok(putSpy.stub.calledOnce, 'was called');
+      assert.ok(putSpy.stub.calledWith({
+        Bucket: process.env.RESULTS_BUCKET,
+        Key: `${ap.race}/nextrequest.json`,
+        Body: Buffer.from(JSON.stringify({nextrequest})),
+        ContentType: 'application/json',
+        CacheControl: 'no-cache,no-store,max-age=60',
+        ACL: 'public-read',
+        Expires: moment('12/31/1969', 'MM/DD/YYYY').toDate()
+      }), 'expected args');
+
+    });
+
+    it('adds some additonal metadata to the result set', async function() {
+      let now = moment();
+      let results = await ap.fetchResults();
+
+      assert.equal(results.lastUpdated, `${now.format('h:mm a')} ET`);
+      assert.ok(!results.pollsClosed, 'should report polls are open')
+
+      ap.pollsCloseAt = now.clone().subtract(60, 'minutes');
+
+      results = await ap.fetchResults();
+      assert.ok(results.pollsClosed, 'should report polls are closed');
+    });
+
+    it('filters and excludes races', async function() {
+      let results = await ap.fetchResults();
+
+      assert.equal(results.races.length, resultsMock.races.length, 'pull all races if unspecified');
+
+      ap.includeRaces = ["31206", 31214];
+      results = await ap.fetchResults();
+      assert.equal(results.races.length, 2, 'includes specified races; can mix types');
+
+      ap.includeRaces = [];
+      ap.excludeRaces = ["31206", 31214];
+      results = await ap.fetchResults();
+      assert.equal(results.races.length, 3, 'exludes specified races; can mix types');
+    });
+
+    it('pulls out top level race data', async function() {
+      let results = await ap.fetchResults();
+      let expectedKeys = ['raceID', 'officeName', 'seatName', 'description', 'precinctsReporting', 'precinctsTotal', 'totalVotes', 'candidates', 'seatNum', 'numWinners'].sort();
+
+      results.races.forEach(race => assert.deepEqual(expectedKeys, Object.keys(race).sort()));
+    });
+
+    it('sorts candidates by vote then by name', async function() {
+      let resultsCopy = JSON.parse(JSON.stringify(resultsMock));
+
+      // winner first, then vote count, then last name, then first name
+      let { candidates } = resultsCopy.races[0].reportingUnits[0];
+      candidates[2].winner = 'X';
+      candidates[0].voteCount = 1000;
+      candidates[1].last = 'Foo';
+      candidates[3].last = 'Foo';
+      candidates[3].voteCount = 500;
+
+      nock.cleanAll();
+      nock(ap.host).get(`/${ap.path}/${ap.date}`).query(true).reply(200, resultsCopy);
+      let results = await ap.fetchResults();
+      let [ race ] = results.races;
+
+      assert.equal(race.candidates[0].candidateID, candidates[2].candidateID);
+      assert.equal(race.candidates[1].candidateID, candidates[0].candidateID);
+      assert.equal(race.candidates[2].candidateID, candidates[3].candidateID);
+      assert.equal(race.candidates[3].candidateID, candidates[1].candidateID);
+    });
+  });
 });
