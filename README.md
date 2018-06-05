@@ -9,7 +9,14 @@ lambda: votes-in-the-machine-<env>
 bucket: votes-in-the-machine-<env>
 
 ## ap client params
-- date: `YYYY-MM-DD`
-- statePostal
-- test
-- national
+- race: string, internal identifier used for s3 path prefix
+- date: `YYYY-MM-DD`, election date
+- pollsCloseAt: `YYYY-MM-DD-HH-mm`
+- statePostal: string
+- test: boolean
+- national: boolean
+- party: string
+- uncontested: boolean
+- level: string
+- includeRaces: array
+- excludeRaces: array
