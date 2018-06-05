@@ -3,6 +3,7 @@ const { uploadToS3 } = require('./lib/upload');
 const moment = require('moment');
 
 exports.handler = async params => {
+  console.log(params);
   const ap = new APClient(params);
   const { race } = params;
 
