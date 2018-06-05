@@ -12,13 +12,14 @@
   "devDependencies": {
     "aws-sdk-mock": "^2.0.0",
     "dotenv": "^6.0.0",
+    "eslint": "^4.19.1",
     "mocha": "^5.2.0",
     "nock": "^9.3.0",
     "node-lambda": "^0.11.7",
     "sinon": "^5.0.10"
   },
   "scripts": {
-    "test": "RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api mocha"
+    "test": "RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api AP_API_KEY=foo mocha"
   },
   "repository": {
     "type": "git",
