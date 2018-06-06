@@ -20,7 +20,7 @@
     "sinon": "^5.0.10"
   },
   "scripts": {
-    "test": "RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api AP_API_KEY=foo mocha"
+    "test": "NODE_ENV=test RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api AP_API_KEY=foo mocha"
   },
   "repository": {
     "type": "git",
