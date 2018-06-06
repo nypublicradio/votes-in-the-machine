@@ -200,6 +200,8 @@ describe('ap client', function() {
         Bucket: process.env.RESULTS_BUCKET,
         Key: `${testOptions.race}/results.json`
       }));
+
+      assert.deepEqual(response.races, s3results.races);
     });
   });
 

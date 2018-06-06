@@ -117,6 +117,7 @@ describe('handler', function() {
 
     assert.equal(putStub.callCount, 3, 'uploads new nextrequest value and updated results to s3');
 
+    assert.equal(response.races.length, s3results.races.length);
   });
 
   it('throws if an election date is not specified')
