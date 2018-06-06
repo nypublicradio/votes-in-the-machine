@@ -64,7 +64,7 @@ describe('ap client', function() {
     });
 
     it('returns null if no delta information is found', async function() {
-      let spy = sinon.stub().callsArgWith(1, null, {code: 'NoSuchKey'});
+      let spy = sinon.stub().callsArgWith(1, {code: 'NoSuchKey'}, null);
       AWS.mock('S3', 'getObject', spy);
 
       const ap = new APClient(testOptions);
@@ -76,7 +76,7 @@ describe('ap client', function() {
     });
 
     it('throws for other errors', async function() {
-      let spy = sinon.stub().callsArgWith(1, null, {});
+      let spy = sinon.stub().callsArgWith(1, 'error', null);
       AWS.mock('S3', 'getObject', spy);
       const ap = new APClient(testOptions);
 

@@ -39,7 +39,7 @@ describe('handler', function() {
   })
 
   it('it gets initial results from the ap endpoint', async function() {
-    let getStub = sinon.stub().callsArgWith(1, null, {code: 'NoSuchKey'});
+    let getStub = sinon.stub().callsArgWith(1, {code: 'NoSuchKey'}, null);
     let putStub = sinon.stub().callsArgWith(1, null, null);
     AWS.mock('S3', 'putObject', putStub);
     AWS.mock('S3', 'getObject', getStub);
