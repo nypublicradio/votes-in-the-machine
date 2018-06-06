@@ -196,6 +196,8 @@ describe('ap client', function() {
       const ap = new APClient(testOptions);
       let response = await ap.fetchCachedResults();
 
+      AWS.restore('S3');
+
       assert.ok(getSpy.calledWith({
         Bucket: process.env.RESULTS_BUCKET,
         Key: `${testOptions.race}/results.json`
@@ -206,6 +208,7 @@ describe('ap client', function() {
   });
 
   describe('.mergeResults()', function() {
+
     afterEach(function() {
       nock.cleanAll();
       AWS.restore('S3');
@@ -226,8 +229,6 @@ describe('ap client', function() {
 
     it('returns an updated result set', async function() {
       const NEXT_URL = 'http://example.com/next';
-      let apClient = new APClient(testOptions);
-
       let putSpy = AWS.mock('S3', 'putObject');
 
       mockGetResponse.Body = Buffer.from(JSON.stringify(s3results)); // S3 returns a buffer as the Body
@@ -237,6 +238,7 @@ describe('ap client', function() {
         .query(true)
         .reply(200, nextresults);
 
+      let apClient = new APClient(testOptions);
       let response = await apClient.mergeResults(NEXT_URL);
 
       let { races } = response;

@@ -36,7 +36,7 @@ describe('handler', function() {
   afterEach(function() {
     nock.cleanAll();
     AWS.restore('S3');
-  })
+  });
 
   it('it gets initial results from the ap endpoint', async function() {
     let getStub = sinon.stub().callsArgWith(1, {code: 'NoSuchKey'}, null);
@@ -44,7 +44,7 @@ describe('handler', function() {
     AWS.mock('S3', 'putObject', putStub);
     AWS.mock('S3', 'getObject', getStub);
 
-    let apServer = nock(process.env.AP_RESULTS_HOST)
+    nock(process.env.AP_RESULTS_HOST)
       .get(`/${process.env.AP_RESULTS_PATH}/${testOptions.date}`)
       .query(true)
       .reply(200, apMock);
@@ -113,7 +113,6 @@ describe('handler', function() {
       Bucket: process.env.RESULTS_BUCKET,
       Key: `${testOptions.race}/results.json`
     }), 'pulls down current results');
-
 
     assert.equal(putStub.callCount, 3, 'uploads new nextrequest value and updated results to s3');
 
