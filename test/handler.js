@@ -19,6 +19,20 @@ describe('handler', function() {
     race: 'race-slug'
   };
 
+  let mockGetResponse;
+  beforeEach(function() {
+    mockGetResponse = {
+      AcceptRanges: 'bytes',
+      LastModified: '2018-06-06T14:47:15.000Z',
+      ContentLength: 128,
+      ETag: '"0a9b1f0fed2fb8eac237d199305298c1"',
+      CacheControl: 'no-cache,no-store,max-age=60',
+      ContentType: 'application/json',
+      Expires: '1969-12-31T05:00:00.000Z',
+      Metadata: {},
+    };
+  });
+
   afterEach(function() {
     nock.cleanAll();
     AWS.restore('S3');
@@ -73,9 +87,12 @@ describe('handler', function() {
 
   it('it updates existing results using `nexturl`', async function() {
     const NEXT_URL = 'http://example.com/next';
+    let mockNextUrlResponse = {...mockGetResponse, Body: Buffer.from(JSON.stringify({nextrequest: NEXT_URL}))}; // S3 returns a buffer as the Body
+    let resultsResponse = {...mockGetResponse, Body: Buffer.from(JSON.stringify(s3results))};
+
     let getStub = sinon.stub()
-      .onFirstCall().callsArgWith(1, null, {nextrequest: NEXT_URL})
-      .onSecondCall().callsArgWith(1, null, s3results)
+      .onFirstCall().callsArgWith(1, null, mockNextUrlResponse)
+      .onSecondCall().callsArgWith(1, null, resultsResponse)
 
     let putStub = sinon.stub().callsArgWith(1, null, null);
     AWS.mock('S3', 'getObject', getStub);

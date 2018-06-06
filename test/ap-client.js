@@ -19,6 +19,20 @@ describe('ap client', function() {
     race: 'race-slug'
   };
 
+  let mockGetResponse;
+  beforeEach(function() {
+    mockGetResponse = {
+      AcceptRanges: 'bytes',
+      LastModified: '2018-06-06T14:47:15.000Z',
+      ContentLength: 128,
+      ETag: '"0a9b1f0fed2fb8eac237d199305298c1"',
+      CacheControl: 'no-cache,no-store,max-age=60',
+      ContentType: 'application/json',
+      Expires: '1969-12-31T05:00:00.000Z',
+      Metadata: {},
+    };
+  })
+
   it('intializes with parameters', function() {
     const ap = new APClient(testOptions);
     assert.equal(ap.date, '2018-11-08');
@@ -32,7 +46,9 @@ describe('ap client', function() {
   describe('.nextRequest()', function() {
 
     it('checks the correct path', async function() {
-      let spy = sinon.stub().callsArgWith(1, null, {nextrequest: 'foo.com'});
+      mockGetResponse.Body = Buffer.from(JSON.stringify({nextrequest: 'foo.com'})); // S3 returns a buffer as the Body
+
+      let spy = sinon.stub().callsArgWith(1, null, mockGetResponse);
       AWS.mock('S3', 'getObject', spy);
 
       const ap = new APClient(testOptions);
@@ -171,8 +187,10 @@ describe('ap client', function() {
   });
 
   describe('.fetchCachedResults()', function() {
+
     it('gets the most recent result set from the bucket', async function() {
-      let getSpy = sinon.stub().callsArgWith(1, null, {});
+      mockGetResponse.Body = Buffer.from(JSON.stringify(s3results)); // S3 returns a buffer as the Body
+      let getSpy = sinon.stub().callsArgWith(1, null, mockGetResponse);
       AWS.mock('S3', 'getObject', getSpy);
 
       const ap = new APClient(testOptions);
@@ -209,7 +227,9 @@ describe('ap client', function() {
       let apClient = new APClient(testOptions);
 
       let putSpy = AWS.mock('S3', 'putObject');
-      AWS.mock('S3', 'getObject', s3results);
+
+      mockGetResponse.Body = Buffer.from(JSON.stringify(s3results)); // S3 returns a buffer as the Body
+      AWS.mock('S3', 'getObject', sinon.stub().callsArgWith(1, null, mockGetResponse));
       nock('http://example.com')
         .get('/next')
         .query(true)
