@@ -5,7 +5,7 @@ const moment = require('moment-timezone');
 moment.tz.setDefault('America/New_York');
 
 exports.handler = async params => {
-  console.log(params);
+  console.log(params); // eslint-disable-line
   const ap = new APClient(params);
   const { race } = params;
 
@@ -16,13 +16,13 @@ exports.handler = async params => {
     let updatedResults = await ap.mergeResults(nextrequestUrl);
     if (updatedResults) {
       response = await uploadToS3(updatedResults, {prefix: race});
-      console.log('success:', response);
+      console.log('success:', response); // eslint-disable-line
       return updatedResults;
     }
   } else {
     let newResults = await ap.fetchResults();
     response = await uploadToS3(newResults, {prefix: race});
-    console.log('success:', response);
+    console.log('success:', response); // eslint-disable-line
     return newResults;
   }
 }
