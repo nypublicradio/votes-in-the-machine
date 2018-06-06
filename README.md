@@ -1,5 +1,5 @@
 # votes in the machine
-A configurable daemon for polling the AP's election results API. Results are cached to S3 for client retrieval. This is designed to execute as a Lambda function in response to CloudWatch Events configured using a JSON constant with [parameters outlined below](#daemon-params)
+A configurable daemon for polling the AP's election results API. Results are cached to S3 for client retrieval. This is designed to execute as a Lambda function in response to CloudWatch Events configured using a JSON constant with [parameters outlined below](#daemon-params).
 
 ## requirements
 node 8.10
@@ -16,10 +16,10 @@ node 8.10
 These parameters are passed into the lambda function as the first parameter. These mostly map one-to-one with the parameters outlined in the [AP's docs](http://customersupport.ap.org/doc/AP_Elections_API_Developer_Guide.pdf). More information and additional parameters can be found at that link.
 
 name | type |  description
---- | --- | --- | ---
+--- | --- | ---
 `race` | `String` | internal identifier used for S3 path prefix to store results
-`date` | `String` in format `YYYY-MM-DD` | election date, required for AP API
-`pollsCloseAt` | `String` in format `YYYY-MM-DD-HH-mm` | Controls `pollsClosed` field in results
+`date` | `String YYYY-MM-DD` | election date, required for AP API
+`pollsCloseAt` | `String YYYY-MM-DD-HH-mm` | Controls `pollsClosed` field in results
 `statePostal` | `String` | Two-letter state code
 `test` | `Boolean` | retrieve results test mode
 `national` | `Boolean` | Filters races based on whether they are national or not
