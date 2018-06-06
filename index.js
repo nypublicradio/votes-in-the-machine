@@ -22,6 +22,10 @@ exports.handler = async params => {
         console.log('success:', response); // eslint-disable-line
       }
       return updatedResults;
+    } else {
+      if (process.env.NODE_ENV !== 'test') {
+        console.log('no new results'); // eslint-disable-line
+      }
     }
   } else {
     let newResults = await ap.fetchResults();
