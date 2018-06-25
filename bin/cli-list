@@ -1,0 +1,31 @@
+#! /usr/bin/env node
+
+const program = require('commander');
+const chalk = require('chalk');
+
+const { getRules } = require('./lib/util.js')
+
+const { log } = console;
+
+program
+  .option('-e, --environment [env]', 'environment')
+  .parse(process.argv);
+
+let { environment } = program;
+
+if (environment && !['demo', 'prod'].includes(environment)) {
+  log(chalk.yellow('"%s" is not a supported environment. Ignoring.'), environment);
+  environment = undefined;
+} else if (environment){
+  log(chalk.underline(chalk`Listing rules for {white.bold ${environment}}`));
+} else {
+  log(chalk.underline(chalk`Listing {white.bold all rules}`));
+}
+
+function printRule(rule) {
+  let state = rule.State === 'DISABLED' ? chalk.red.bold(rule.State) : chalk.green.bold(rule.State);
+  log(chalk`Name: {blue ${rule.Name}}`);
+  log(`State: ${state}`);
+}
+
+getRules(environment).then(rules => rules.forEach(printRule));

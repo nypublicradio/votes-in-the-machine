@@ -1,0 +1,54 @@
+#! /usr/bin/env node
+// this is a sub command of `bin/cli` and is called from the command line like so `./bin/cli view`
+
+const aws = require('aws-sdk');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const program = require('commander');
+
+const labmda = new aws.Lambda();
+const cloudwatch = new aws.CloudWatchEvents();
+
+const { getRules, pickRulePrompt } = require('./lib/util.js');
+
+const { log } = console;
+
+const MESSAGE = 'Pick a rule to view.';
+
+program
+  .arguments('[rule name]')
+  .option('-e, --environment [env]', 'filter options by environment')
+  .parse(process.argv);
+
+let [ rule ] = program.args;
+let { environment } = program;
+
+async function chooseARule(rules) {
+  let pickARule = pickRulePrompt(rules, MESSAGE);
+  let { rule } = await inquirer.prompt(pickARule);
+  return rule.Name;
+}
+
+async function printDetails(rule) {
+  try {
+    let [details, targets] = await Promise.all([
+      cloudwatch.describeRule({Name: rule}).promise(),
+      cloudwatch.listTargetsByRule({Rule: rule}).promise(),
+    ]);
+    log(chalk.blue.underline(rule));
+    log(JSON.stringify(details, null, ' '));
+    log(chalk.blue('Targets:'));
+    log(JSON.stringify(targets, null, ' '));
+  } catch(e) {
+    log(chalk.red(e));
+    process.exit(1);
+  }
+}
+
+if (rule) {
+  printDetails(rule);
+} else {
+  getRules(environment)
+    .then(chooseARule)
+    .then(printDetails)
+}
