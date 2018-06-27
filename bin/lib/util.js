@@ -1,7 +1,10 @@
 const aws = require('aws-sdk');
+const chalk = require('chalk');
 
 const cloudwatch = new aws.CloudWatchEvents();
 const lambda = new aws.Lambda();
+
+const { log } = console;
 
 const DEMO_LAMBDA = 'votes-in-the-machine-demo';
 const PROD_LAMBDA = 'votes-in-the-machine-prod';
@@ -31,7 +34,27 @@ function pickRulePrompt(rules, message) {
   return question;
 }
 
+async function printDetails(rule) {
+  try {
+    let { Targets: [ target ] } = await cloudwatch.listTargetsByRule({Rule: rule.Name}).promise();
+    let state = rule.State === 'DISABLED' ? chalk.bold.red(rule.State) : chalk.bold.green(rule.State);
+    let config = JSON.stringify(JSON.parse(target.Input), null, '  ');
+
+    log(chalk.bold.underline(rule.Name));
+    log(`State: ${state}`);
+    log('Schedule:', rule.ScheduleExpression);
+    log('Event Config:', chalk.keyword('wheat')(config));
+
+    return { rule, target };
+  } catch(e) {
+    log(chalk.red(e));
+    process.exit(1);
+  }
+}
+
+
 module.exports = {
   getRules,
-  pickRulePrompt
+  pickRulePrompt,
+  printDetails
 }
