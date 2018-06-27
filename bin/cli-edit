@@ -1,0 +1,127 @@
+#! /usr/bin/env node
+
+const aws = require('aws-sdk');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const program = require('commander');
+
+const { getRules, pickRulePrompt, printDetails } = require('./lib/util.js');
+const EditLoop = require('./lib/edit-loop.js');
+
+const cloudwatch = new aws.CloudWatchEvents();
+
+const { log } = console;
+const MESSAGE = 'Pick a rule to edit.';
+
+const STATE = 'state';
+const EVENT = 'event';
+const SCHEDULE = 'schedule';
+const FIELD_CHOICES =  {
+  [STATE]: 'State',
+  [EVENT]: 'Event',
+  [SCHEDULE]: 'Schedule', // not supported yet
+};
+
+const ENABLE_OR_DISABLE = {
+  type: 'list',
+  name: 'enable',
+  message: 'Enable or Disable?',
+  choices: [{name: 'Enable', value: true}, {name: 'Disable', value: false}]
+};
+
+program
+  .arguments('[rule name]')
+  .option('-e, --environment [env]', 'filter options by environment')
+  .parse(process.argv);
+
+let [ rule ] = program.args;
+let { environment } = program;
+
+async function chooseRule(rules) {
+  let pickARule = pickRulePrompt(rules, MESSAGE);
+  let { rule } = await inquirer.prompt(pickARule);
+  return rule;
+}
+
+async function verifyRule(rule) {
+  let { Rules } = await cloudwatch.listRules({NamePrefix: rule}).promise();
+  if (Rules.length > 1) {
+    log(chalk.yellow('More than one event configuration found.'));
+    return await chooseRule(Rules);
+  } else if (Rules.length === 1) {
+    return Rules[0];
+  } else {
+    log(chalk.red('No rules found for name "%s"'), rule);
+    process.exit();
+  }
+}
+
+async function chooseField({ rule, target }) {
+  let { choice } = await inquirer.prompt({
+    type: 'list',
+    name: 'choice',
+    message: 'Which field to edit?',
+    choices: [
+      {value: EVENT, name: FIELD_CHOICES[EVENT]},
+      {value: STATE, name: FIELD_CHOICES[STATE]},
+    ]
+  });
+
+  return {choice, rule, target};
+}
+
+async function updateField({choice, rule, target}) {
+  switch(choice) {
+  case EVENT:
+    await updateEvent({rule, target});
+    break;
+  case STATE:
+    await updateState({rule, target});
+    break;
+  default:
+    log(chalk.yellow('Unrecognized choice: "%s"'), choice);
+  }
+
+  logSuccess({ rule });
+}
+
+async function updateEvent({rule, target}) {
+  let loop = new EditLoop({
+    edit: JSON.parse(target.Input),
+  });
+
+  let updatedEvent = await loop.conduct();
+
+  await cloudwatch.putTargets({Rule: rule.Name, Targets: [{
+    Arn: target.Arn,
+    Id: target.Id,
+    Input: JSON.stringify(updatedEvent)
+  }]}).promise();
+}
+
+async function updateState({ rule }) {
+  let { enable } = await inquirer.prompt(ENABLE_OR_DISABLE);
+  if (enable) {
+    await cloudwatch.enableRule({Name: rule.Name}).promise();
+  } else {
+    await cloudwatch.disableRule({Name: rule.Name}).promise();
+  }
+}
+
+async function logSuccess({ rule }) {
+  let updated = await cloudwatch.describeRule({Name: rule.Name}).promise();
+  log(chalk.yellow('UPDATED'));
+  printDetails(updated);
+}
+
+let chosenRule;
+if (rule) {
+  chosenRule = verifyRule(rule);
+} else {
+  chosenRule = getRules(environment).then(chooseRule);
+}
+
+chosenRule
+  .then(printDetails)
+  .then(chooseField)
+  .then(updateField);
