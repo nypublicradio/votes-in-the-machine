@@ -7,6 +7,6 @@ const program = require('commander');
 program
   .version('0.0.1')
   .command('list', 'list names and states of event rules')
-  .command('state', 'enable or disable an event rule')
   .command('view', 'view rule details')
+  .command('edit', 'update rule config')
   .parse(process.argv);
