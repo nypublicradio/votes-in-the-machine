@@ -6,7 +6,6 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const program = require('commander');
 
-const labmda = new aws.Lambda();
 const cloudwatch = new aws.CloudWatchEvents();
 
 const { getRules, pickRulePrompt } = require('./lib/util.js');
@@ -26,19 +25,19 @@ let { environment } = program;
 async function chooseARule(rules) {
   let pickARule = pickRulePrompt(rules, MESSAGE);
   let { rule } = await inquirer.prompt(pickARule);
-  return rule.Name;
+  return rule;
 }
 
 async function printDetails(rule) {
   try {
-    let [details, targets] = await Promise.all([
-      cloudwatch.describeRule({Name: rule}).promise(),
-      cloudwatch.listTargetsByRule({Rule: rule}).promise(),
-    ]);
-    log(chalk.blue.underline(rule));
-    log(JSON.stringify(details, null, ' '));
+    let { Targets } = await cloudwatch.listTargetsByRule({Rule: rule.Name}).promise();
+    Targets.forEach(target => target.Input = JSON.parse(target.Input));
+
+    log(chalk.blue.underline(rule.Name));
+    log(JSON.stringify(rule, null, '  '));
     log(chalk.blue('Targets:'));
-    log(JSON.stringify(targets, null, ' '));
+    log(JSON.stringify(Targets, null, '  '));
+
   } catch(e) {
     log(chalk.red(e));
     process.exit(1);
