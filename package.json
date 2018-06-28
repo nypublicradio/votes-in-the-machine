@@ -28,9 +28,10 @@
     "cli": "./bin/cli",
     "view": "./bin/cli view",
     "edit": "./bin/cli edit",
-    "list": "./bin/cli list"
+    "list": "./bin/cli list",
+    "create": "./bin/cli create",
+    "del": "./bin/cli delete"
   },
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nypublicradio/votes-in-the-machine.git"
