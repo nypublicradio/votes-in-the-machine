@@ -17,12 +17,12 @@ const cloudwatch = new aws.CloudWatchEvents();
 
 const { log } = console;
 
-const STATE = 'state';
+const STATE = 'status';
 const EVENT = 'event';
 const SCHEDULE = 'schedule';
 const FIELD_CHOICES =  {
   [STATE]: 'State',
-  [EVENT]: 'Event Config',
+  [EVENT]: 'Config',
   [SCHEDULE]: 'Schedule', // not supported yet
 };
 
@@ -45,7 +45,7 @@ async function chooseField({ rule, target }) {
   let { choice } = await inquirer.prompt({
     type: 'list',
     name: 'choice',
-    message: 'Update state or edit event config?',
+    message: 'Update status or edit config?',
     choices: [
       {value: EVENT, name: FIELD_CHOICES[EVENT]},
       {value: STATE, name: FIELD_CHOICES[STATE]},

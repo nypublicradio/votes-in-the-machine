@@ -25,12 +25,12 @@ async function getRules(env) {
 async function verifyRule(rule) {
   let { Rules } = await cloudwatch.listRules({NamePrefix: rule}).promise();
   if (Rules.length > 1) {
-    log(chalk.yellow('More than one event configuration found.'));
+    log(chalk.yellow('More than one election monitor configuration found.'));
     return await chooseRulePrompt(Rules);
   } else if (Rules.length === 1) {
     return Rules[0];
   } else {
-    log(chalk.red('No rules found for name "%s"'), rule);
+    log(chalk.red('No election monitors found for name "%s"'), rule);
     process.exit();
   }
 }
@@ -40,7 +40,7 @@ async function chooseRulePrompt(rules) {
   let pickARule = {
     type: 'list',
     name: 'rule',
-    message: 'Choose a rule.',
+    message: 'Choose an election monitor.',
     choices: rules.map(r => ({
       name: `${r.Name}: ${r.State}`,
       value: r
@@ -61,7 +61,7 @@ async function printDetails(rule) {
     if (target) {
       let config = JSON.stringify(JSON.parse(target.Input), null, '  ');
       log('Lambda:', target.Arn);
-      log('Event Config:', chalk.keyword('wheat')(config));
+      log('Election Monitor Config:', chalk.keyword('wheat')(config));
     } else {
       log(chalk.keyword('wheat')('No target lambda configured'));
     }
