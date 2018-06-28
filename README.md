@@ -5,10 +5,10 @@ A configurable daemon for polling the AP's election results API. Results are cac
 node 8.10
 - IAM role: votes-in-the-machine-role
 - Policy: votes-in-the-machine-policy
- - S3:PutObject
- - S3:PutObjectACL
- - S3:GetObject
- - S3:ListBucket
+  - S3:PutObject
+  - S3:PutObjectACL
+  - S3:GetObject
+  - S3:ListBucket
 - lambda: votes-in-the-machine-`<env>`
 - bucket: votes-in-the-machine-`<env>`
 
