@@ -58,3 +58,30 @@ Local deployments are also possible with the correct envvars set, defined in `.e
 - `AWS_ROLE_ARN`
 - `AWS_REGION`
 - `AWS_FUNCTION_NAME`
+
+## cli
+This repo includes some command line tools to administer election monitors set up via this service.
+
+```bash
+$ npm run cli
+Usage: cli [options] [command]
+
+Options:
+
+  -V, --version  output the version number
+  -h, --help     output usage information
+
+Commands:
+
+  list           list name and status of election monitors
+  view           get a detailed look at an election monitor
+  edit           update an election monitor config
+  create         create a new election monitor
+  delete         delete an existing election monitor
+  help [cmd]     display help for [cmd]
+```
+
+To filter by either the `demo` or `prod` environments, set the `-e` or `--environment` flag after a pair of dashes like so:
+```bash
+$ npm run list -- -e prod
+```
