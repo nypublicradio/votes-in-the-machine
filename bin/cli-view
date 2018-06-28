@@ -45,7 +45,8 @@ async function printDetails(rule) {
 }
 
 if (rule) {
-  printDetails(rule);
+  cloudwatch.describeRule({Name: rule}).promise()
+    .then(printDetails);
 } else {
   getRules(environment)
     .then(chooseARule)
