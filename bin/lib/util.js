@@ -1,5 +1,6 @@
 const aws = require('aws-sdk');
 const chalk = require('chalk');
+const inquirer = require('inquirer');
 
 const cloudwatch = new aws.CloudWatchEvents();
 const lambda = new aws.Lambda();
@@ -21,29 +22,49 @@ async function getRules(env) {
   }
 }
 
-function pickRulePrompt(rules, message) {
-  let question = {
+async function verifyRule(rule) {
+  let { Rules } = await cloudwatch.listRules({NamePrefix: rule}).promise();
+  if (Rules.length > 1) {
+    log(chalk.yellow('More than one event configuration found.'));
+    return await chooseRulePrompt(Rules);
+  } else if (Rules.length === 1) {
+    return Rules[0];
+  } else {
+    log(chalk.red('No rules found for name "%s"'), rule);
+    process.exit();
+  }
+}
+
+
+async function chooseRulePrompt(rules) {
+  let pickARule = {
     type: 'list',
     name: 'rule',
-    message: message,
+    message: 'Choose a rule.',
     choices: rules.map(r => ({
       name: `${r.Name}: ${r.State}`,
       value: r
     }))
   };
-  return question;
+  let { rule } = await inquirer.prompt(pickARule);
+  return rule;
 }
 
 async function printDetails(rule) {
   try {
     let { Targets: [ target ] } = await cloudwatch.listTargetsByRule({Rule: rule.Name}).promise();
     let state = rule.State === 'DISABLED' ? chalk.bold.red(rule.State) : chalk.bold.green(rule.State);
-    let config = JSON.stringify(JSON.parse(target.Input), null, '  ');
 
     log(chalk.bold.underline(rule.Name));
     log(`State: ${state}`);
     log('Schedule:', rule.ScheduleExpression);
-    log('Event Config:', chalk.keyword('wheat')(config));
+    if (target) {
+      let config = JSON.stringify(JSON.parse(target.Input), null, '  ');
+      log('Lambda:', target.Arn);
+      log('Event Config:', chalk.keyword('wheat')(config));
+    } else {
+      log(chalk.keyword('wheat')('No target lambda configured'));
+    }
 
     return { rule, target };
   } catch(e) {
@@ -55,6 +76,7 @@ async function printDetails(rule) {
 
 module.exports = {
   getRules,
-  pickRulePrompt,
-  printDetails
+  chooseRulePrompt,
+  printDetails,
+  verifyRule
 }

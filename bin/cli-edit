@@ -5,13 +5,17 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const program = require('commander');
 
-const { getRules, pickRulePrompt, printDetails } = require('./lib/util.js');
 const EditLoop = require('./lib/edit-loop.js');
+const {
+  getRules,
+  chooseRulePrompt,
+  printDetails,
+  verifyRule
+} = require('./lib/util.js');
 
 const cloudwatch = new aws.CloudWatchEvents();
 
 const { log } = console;
-const MESSAGE = 'Pick a rule to edit.';
 
 const STATE = 'state';
 const EVENT = 'event';
@@ -36,25 +40,6 @@ program
 
 let [ rule ] = program.args;
 let { environment } = program;
-
-async function chooseRule(rules) {
-  let pickARule = pickRulePrompt(rules, MESSAGE);
-  let { rule } = await inquirer.prompt(pickARule);
-  return rule;
-}
-
-async function verifyRule(rule) {
-  let { Rules } = await cloudwatch.listRules({NamePrefix: rule}).promise();
-  if (Rules.length > 1) {
-    log(chalk.yellow('More than one event configuration found.'));
-    return await chooseRule(Rules);
-  } else if (Rules.length === 1) {
-    return Rules[0];
-  } else {
-    log(chalk.red('No rules found for name "%s"'), rule);
-    process.exit();
-  }
-}
 
 async function chooseField({ rule, target }) {
   let { choice } = await inquirer.prompt({
@@ -118,7 +103,7 @@ let chosenRule;
 if (rule) {
   chosenRule = verifyRule(rule);
 } else {
-  chosenRule = getRules(environment).then(chooseRule);
+  chosenRule = getRules(environment).then(chooseRulePrompt);
 }
 
 chosenRule
