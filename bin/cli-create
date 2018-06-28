@@ -1,0 +1,90 @@
+#! /usr/bin/env node
+
+const aws = require('aws-sdk');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const program = require('commander');
+const moment = require('moment-timezone');
+
+const cloudwatch = new aws.CloudWatchEvents();
+const lambda = new aws.Lambda();
+
+const { printDetails } = require('./lib/util.js');
+
+const { log } = console;
+
+inquirer.registerPrompt('datetime', require('inquirer-datepicker-prompt'))
+
+program
+  .option('-e, --environment [env]')
+  .parse(process.argv);
+
+let { environment = 'demo' } = program;
+
+if (!['demo', 'prod'].includes(environment)) {
+  log(chalk.red('"%s" is an invalid environment. Must specify either `demo` or `prod`.'), environment);
+  process.exit(1);
+} else {
+  log(chalk.yellow('Creating a new election monitor in %s'), environment);
+}
+
+const EVENT_INPUTS = [
+  {type: 'input', name: 'race', message: 'Slug (used for S3 path prefix):', validate: t => /^[^\s]+$/.test(t)},
+  {type: 'datetime', name: 'pollsCloseAt', message: 'Set `pollsClosed` field at this time:'},
+  {type: 'datetime', name: 'date', message: 'Election date:', format: ['m', '/', 'd', '/', 'yyyy']},
+  {type: 'input', name: 'statePostal', message: 'Two-letter state code:'},
+];
+
+async function configureEvent() {
+  let rule = {};
+  for (let i = 0; i < EVENT_INPUTS.length; i++) {
+    let input = EVENT_INPUTS[i];
+    let response = await inquirer.prompt(input);
+    rule = {...rule, ...response};
+  }
+
+  rule.pollsCloseAt = moment(rule.pollsCloseAt).format('YYYY-MM-DD-HH-mm');
+  rule.date = moment(rule.date).format('YYYY-MM-DD');
+
+  let { test } = await inquirer.prompt({
+    type: 'confirm',
+    name: 'test',
+    message: 'Set test mode?',
+    default: false
+  })
+
+  if (test) {
+    rule.test = true;
+  }
+
+  return rule;
+}
+
+async function createEvent(config) {
+  let ruleParams = {
+    Name: config.race,
+    ScheduleExpression: 'rate(1 minute)',
+    State: 'DISABLED',
+  };
+  let FunctionName = `votes-in-the-machine-${environment}`;
+
+  let [ {Configuration: { FunctionArn:targetLambda } } ] = await Promise.all([
+    lambda.getFunction({ FunctionName }).promise(),
+    cloudwatch.putRule(ruleParams).promise()
+  ]);
+
+  let targetParams = {
+    Rule: config.race,
+    Targets: [{
+      Id: config.race,
+      Arn: targetLambda,
+      Input: JSON.stringify(config)
+    }]
+  };
+
+  await cloudwatch.putTargets(targetParams).promise();
+
+  await printDetails(ruleParams);
+}
+
+configureEvent().then(createEvent);

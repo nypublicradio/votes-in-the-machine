@@ -1,0 +1,51 @@
+#! /usr/bin/env node
+
+const aws = require('aws-sdk');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const program = require('commander');
+
+const cloudwatch = new aws.CloudWatchEvents();
+
+const {
+  getRules,
+  chooseRulePrompt,
+  printDetails,
+  verifyRule
+} = require('./lib/util.js');
+
+const { log } = console;
+
+program
+  .arguments('[rule name]')
+  .option('-e, --environment [env]')
+  .parse(process.argv);
+
+let [ rule ] = program.args;
+let { environment } = program;
+
+async function deleteRule({ rule, target = {} }) {
+  let { confirm } = await inquirer.prompt({
+    type: 'confirm',
+    name: 'confirm',
+    message: `About to delete "${rule.Name}". Are you sure?`,
+    default: false
+  });
+
+  if (confirm) {
+    await cloudwatch.removeTargets({Rule: rule.Name, Ids: [ target.Id ]}).promise();
+    await cloudwatch.deleteRule({Name: rule.Name}).promise();
+    log(chalk.bold.green('Success'));
+  } else {
+    log(chalk.yellow('Not deleting %s'), rule.Name);
+  }
+}
+
+let chosenRule;
+if (rule) {
+  chosenRule = verifyRule(rule);
+} else {
+  chosenRule = getRules(environment).then(chooseRulePrompt);
+}
+
+chosenRule.then(printDetails).then(deleteRule);

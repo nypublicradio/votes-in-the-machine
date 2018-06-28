@@ -6,7 +6,9 @@ const program = require('commander');
 
 program
   .version('0.0.1')
-  .command('list', 'list names and states of event rules')
-  .command('view', 'view rule details')
-  .command('edit', 'update rule config')
+  .command('list', 'list names and status of election monitors')
+  .command('view', 'get a detailed look at a specific election monitor')
+  .command('edit', 'update an election monitor config')
+  .command('create', 'create a new election monitor')
+  .command('delete', 'delete an existing election monitor')
   .parse(process.argv);
