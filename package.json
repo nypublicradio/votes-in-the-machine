@@ -23,8 +23,13 @@
     "sinon": "^5.0.10"
   },
   "scripts": {
-    "test": "NODE_ENV=test RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api AP_API_KEY=foo mocha"
+    "test": "NODE_ENV=test RESULTS_BUCKET=test-bucket AP_RESULTS_HOST=https://example.com AP_RESULTS_PATH=api AP_API_KEY=foo mocha",
+    "cli": "./bin/cli",
+    "view": "./bin/cli view",
+    "edit": "./bin/cli edit",
+    "list": "./bin/cli list"
   },
+
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nypublicradio/votes-in-the-machine.git"
