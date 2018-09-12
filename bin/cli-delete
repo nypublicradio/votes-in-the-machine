@@ -33,7 +33,9 @@ async function deleteRule({ rule, target = {} }) {
   });
 
   if (confirm) {
-    await cloudwatch.removeTargets({Rule: rule.Name, Ids: [ target.Id ]}).promise();
+    if (target.Id) {
+      await cloudwatch.removeTargets({Rule: rule.Name, Ids: [ target.Id ]}).promise();
+    }
     await cloudwatch.deleteRule({Name: rule.Name}).promise();
     log(chalk.bold.green('Success'));
   } else {
