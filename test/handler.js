@@ -68,7 +68,7 @@ describe('handler', function() {
 
     assert.ok(putStub.calledWith({
       Bucket: process.env.RESULTS_BUCKET,
-      Key: `${testOptions.race}/timestamp/${moment().format('YYYY-MM-DD_HH-mm-ss')}.json`,
+      Key: `${testOptions.race}/timestamp/${moment().format('YYYY-MM-DDTHH:mm:ssZ')}.json`,
       Body: Buffer.from(JSON.stringify(response)),
       ACL: 'public-read',
       ContentType: 'application/json',
@@ -119,5 +119,5 @@ describe('handler', function() {
     assert.equal(response.races.length, s3results.races.length);
   });
 
-  it('throws if an election date is not specified')
+  // it('throws if an election date is not specified')
 });

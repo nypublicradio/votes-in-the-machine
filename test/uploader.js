@@ -18,7 +18,7 @@ describe('uploader', function() {
     let staticCall = putSpy.stub.secondCall;
 
     assert.ok(putSpy.stub.calledTwice);
-    assert.equal(dynamicCall.args[0].Key, `foo/timestamp/${now.format('YYYY-MM-DD_HH-mm-ss')}.json`, 'static call');
+    assert.equal(dynamicCall.args[0].Key, `foo/timestamp/${now.format('YYYY-MM-DDTHH:mm:ssZ')}.json`, 'dynamic call');
     assert.equal(staticCall.args[0].Key, 'foo/results.json', 'static call');
   });
 

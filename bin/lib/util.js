@@ -12,6 +12,7 @@ const PROD_LAMBDA = 'votes-in-the-machine-prod';
 
 async function getRules(env) {
   let { Rules } = await cloudwatch.listRules().promise();
+  Rules = Rules.filter(rule => rule.Name.startsWith('votes-'));
   if (!env) {
     return Rules;
   } else {
