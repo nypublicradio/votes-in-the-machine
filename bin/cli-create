@@ -61,7 +61,7 @@ async function configureEvent() {
 }
 
 async function createEvent(config) {
-  let ruleName = `${config.race}-${environment}`;
+  let ruleName = `votes-${config.race}-${environment}`;
   let ruleParams = {
     Name: ruleName,
     ScheduleExpression: 'rate(1 minute)',
