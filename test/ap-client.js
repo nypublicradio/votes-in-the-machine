@@ -132,7 +132,7 @@ describe('ap client', function() {
       ap.pollsCloseAt = now.clone().add(60, 'minutes');
       let results = await ap.fetchResults();
 
-      assert.equal(results.lastUpdated, `${now.format('h:mm a')} ET`);
+      assert.equal(results.lastUpdated, now.format());
       assert.ok(!results.pollsClosed, 'should report polls are open')
 
       ap.pollsCloseAt = now.clone().subtract(60, 'minutes');
