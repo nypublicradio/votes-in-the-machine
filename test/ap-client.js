@@ -158,7 +158,7 @@ describe('ap client', function() {
 
     it('pulls out top level race data', async function() {
       let results = await ap.fetchResults();
-      let expectedKeys = ['raceID', 'officeName', 'seatName', 'description', 'precinctsReporting', 'precinctsTotal', 'totalVotes', 'candidates', 'seatNum', 'numWinners'].sort();
+      let expectedKeys = ['raceID', 'officeName', 'seatName', 'description', 'precinctsReporting', 'precinctsTotal', 'totalVotes', 'candidates', 'seatNum', 'numWinners', 'stateName', 'statePostal'].sort();
 
       results.races.forEach(race => assert.deepEqual(expectedKeys, Object.keys(race).sort()));
     });
