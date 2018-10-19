@@ -26,7 +26,7 @@ describe('handler', function() {
       LastModified: '2018-06-06T14:47:15.000Z',
       ContentLength: 128,
       ETag: '"0a9b1f0fed2fb8eac237d199305298c1"',
-      CacheControl: 'no-cache,no-store,max-age=60',
+      CacheControl: 'max-age=30',
       ContentType: 'application/json',
       Expires: '1969-12-31T05:00:00.000Z',
       Metadata: {},
@@ -61,7 +61,7 @@ describe('handler', function() {
       Key: `${testOptions.race}/nextrequest.json`,
       Body: Buffer.from(JSON.stringify({nextrequest: apMock.nextrequest})),
       ContentType: 'application/json',
-      CacheControl: 'no-cache,no-store,max-age=60',
+      CacheControl: 'max-age=30',
       ACL: 'public-read',
       Expires: moment('12/31/1969', 'MM/DD/YYYY').toDate()
     }), 'it caches the new next request value');
@@ -72,7 +72,7 @@ describe('handler', function() {
       Body: Buffer.from(JSON.stringify(response)),
       ACL: 'public-read',
       ContentType: 'application/json',
-      CacheControl: 'no-cache,no-store,max-age=60',
+      CacheControl: 'max-age=30',
     }), 'it uploads the results to the timestamp key');
 
     assert.ok(putStub.calledWith({
@@ -81,7 +81,7 @@ describe('handler', function() {
       Body: Buffer.from(JSON.stringify(response)),
       ACL: 'public-read',
       ContentType: 'application/json',
-      CacheControl: 'no-cache,no-store,max-age=60',
+      CacheControl: 'max-age=30',
     }), 'it uploads the results to the static key');
   });
 
