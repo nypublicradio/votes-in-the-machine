@@ -4,7 +4,7 @@
   "description": "AP elections results lambda poller",
   "main": "index.js",
   "dependencies": {
-    "aws-sdk": "^2.250.1",
+    "aws-sdk": "^2.1354.0",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.17",
     "request": "^2.87.0",
